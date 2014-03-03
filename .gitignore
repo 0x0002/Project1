@@ -24,4 +24,5 @@
 *.sdf
 *.ipch
 *.ilk
-Project1/Debug/
+Intermediate/
+ipch/
