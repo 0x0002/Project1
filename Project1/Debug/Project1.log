@@ -1,0 +1,44 @@
+﻿Build started 3/3/2014 11:53:06 AM.
+     1>Project "C:\Users\Tom\documents\visual studio 2012\Projects\Project1\Project1\Project1.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W4 /WX- /Od /Oy- /D _X86 /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"Precompiled.h" /Fp"Debug\Project1.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt GameLoop.cpp
+         GameLoop.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Tom\documents\visual studio 2012\Projects\Project1\Debug\Project1.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib/x86" d3d11.lib d3dx11.lib dxgi.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Tom\documents\visual studio 2012\Projects\Project1\Debug\Project1.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Tom\documents\visual studio 2012\Projects\Project1\Debug\Project1.lib" /MACHINE:X86 Debug\Assert.obj
+         Debug\DebugConsole.obj
+         Debug\DefaultGameState.obj
+         Debug\DepthStencilBuffer.obj
+         Debug\Device.obj
+         Debug\Draw.obj
+         Debug\EngineStartup.obj
+         Debug\FilePath.obj
+         Debug\GameLoop.obj
+         Debug\GameStateManager.obj
+         Debug\GameWindow.obj
+         Debug\Graphics.obj
+         Debug\InputBinding.obj
+         Debug\InputManager.obj
+         Debug\Lock.obj
+         Debug\Main.obj
+         Debug\Matrix.obj
+         Debug\Matrix22.obj
+         Debug\Matrix33.obj
+         Debug\MemoryManager.obj
+         Debug\Precompiled.obj
+         Debug\Print.obj
+         Debug\Profiler.obj
+         Debug\ProfilerNode.obj
+         Debug\Quaternion.obj
+         Debug\Random.obj
+         Debug\StackAllocator.obj
+         Debug\Stopwatch.obj
+         Debug\Utility.obj
+         Debug\Vector2.obj
+         Debug\Vector3.obj
+         Debug\Vector4.obj
+         Project1.vcxproj -> C:\Users\Tom\documents\visual studio 2012\Projects\Project1\Debug\Project1.exe
+     1>Done Building Project "C:\Users\Tom\documents\visual studio 2012\Projects\Project1\Project1\Project1.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.88
