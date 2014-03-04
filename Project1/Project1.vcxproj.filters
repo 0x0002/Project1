@@ -64,9 +64,13 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="DepthStencilBuffer.cpp" />
     <ClCompile Include="DebugConsole.cpp" />
-    <ClCompile Include="GameStateManager.cpp" />
     <ClCompile Include="EngineStartup.cpp" />
-    <ClCompile Include="DefaultGameState.cpp" />
+    <ClCompile Include="DefaultGameState.cpp">
+      <Filter>Game States</Filter>
+    </ClCompile>
+    <ClCompile Include="GameStateManager.cpp">
+      <Filter>Game States\Declarations</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameLoop.h" />
@@ -161,20 +165,42 @@
     <ClInclude Include="InputTypes.h" />
     <ClInclude Include="DepthStencilBuffer.h" />
     <ClInclude Include="DebugConsole.h" />
-    <ClInclude Include="GameStateBase.h" />
-    <ClInclude Include="GameStateDeclarations.h" />
-    <ClInclude Include="GameStateHashes.h" />
-    <ClInclude Include="GameStateIncludes.h" />
-    <ClInclude Include="GameStateManager.h" />
-    <ClInclude Include="GameStateStrings.h" />
-    <ClInclude Include="GameStateTypes.h" />
     <ClInclude Include="EngineStartup.h" />
     <ClInclude Include="RenderState.h" />
-    <ClInclude Include="DefaultGameState.h" />
+    <ClInclude Include="DefaultGameState.h">
+      <Filter>Game States</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStateBase.h">
+      <Filter>Game States</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStateDeclarations.h">
+      <Filter>Game States\Declarations</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStateHashes.h">
+      <Filter>Game States\Declarations</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStateIncludes.h">
+      <Filter>Game States\Declarations</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStateStrings.h">
+      <Filter>Game States\Declarations</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStateTypes.h">
+      <Filter>Game States\Declarations</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStateManager.h">
+      <Filter>Game States\Declarations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Precompiled">
       <UniqueIdentifier>{49bc2eec-77a2-4c01-891a-3e35fbf0dfe7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game States">
+      <UniqueIdentifier>{e8f205c8-0adc-4267-9fe2-23a24e7226d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game States\Declarations">
+      <UniqueIdentifier>{45f2f130-31a0-4d27-a11b-5e2dd1ce6bdd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

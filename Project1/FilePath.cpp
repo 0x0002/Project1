@@ -1,9 +1,6 @@
 #include "Precompiled.h"
 #include <cctype>       // tolower
-#include <string>       //string container
-
-// convert a file path to use Windows naming conventions
-//void ToWindowsPath( std::string *path );
+#include <string>       // string container
 
 /*------------------------------------------------------------------------------
 constructor

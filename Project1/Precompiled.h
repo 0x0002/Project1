@@ -27,6 +27,7 @@
 #include "UPoint.h"             // pair of uint16s
 #include "Rect.h"               // four int16s
 #include "Print.h"              // Print functions
+#include "DebugConsole.h"       // debug console
 #include "Random.h"             // random number generator
 #include "FilePath.h"           // file path wrapper
 
