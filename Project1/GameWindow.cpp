@@ -149,7 +149,7 @@ void GameWindow::SetResolutionAndFullscreenState( Point const &resolution, bool 
         // if you are fullscreen and running at any resolution other than the monitor's native resolution,
         // you will see this warning:
         // DXGI Warning: IDXGISwapChain::Present: Fullscreen presentation inefficiencies incurred
-        // this is unavoidable
+        // this is unavoidable I think
         DXGI_MODE_DESC const *modeDesc = g_device.GetMatchingDisplayMode( resolution );
         DxVerify( g_device.GetSwapChain()->ResizeTarget( modeDesc ) );
     }

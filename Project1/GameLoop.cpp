@@ -1,6 +1,5 @@
 #include "Precompiled.h"
 #include "GameLoop.h"
-#include "DebugConsole.h"
 
 #include "Profiler.h"
 #include "GameWindow.h"
@@ -21,11 +20,11 @@ void LoadSettings();
 run the engine
 ------------------------------------------------------------------------------*/
 void GameLoop(){ 
-    //#ifdef _DEBUG
-        //OpenDebugConsole();
-    //#endif
+    #ifdef _DEBUG
+        OpenDebugConsole();
+    #endif
 
-    PrintLineConsole( PrintColor::kBlue, "Client" );
+    PrintLineConsole( PrintColor::kBlue, "Project1" );
 
     // initialization
     // this initialization order is important. don't change the order.

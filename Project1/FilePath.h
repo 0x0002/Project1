@@ -4,6 +4,9 @@
 // convert a file path to use Windows naming conventions
 void ToWindowsPath( char *path );
 
+// convert to wchar_t. this returns a temporary buffer only valid until the next call
+wchar_t* ToWchar( char const *str );
+
 /*------------------------------------------------------------------------------
 file path wrapper
 ------------------------------------------------------------------------------*/
@@ -13,9 +16,6 @@ public:
     FilePath() {}
 	FilePath( char const *path );
     FilePath( FilePath const &filePath );
-
-    // assignment operator
-    FilePath& operator=( FilePath const &filePath );
 
     // accessors
     inline char const* GetName() const { return m_name; }
@@ -33,10 +33,10 @@ public:
     };
 
 private:
-    char        m_path[ kMaxPathLength ];           // file path    
-    char        m_name[ kMaxNameLength ];           // filename without extension
-    char        m_directory[ kMaxDirectoryLength ]; // file directory
-    char        m_extension[ kMaxExtensionLength ]; // extension (includes .)
+    char    m_path[ kMaxPathLength ];           // file path    
+    char    m_name[ kMaxNameLength ];           // filename without extension
+    char    m_directory[ kMaxDirectoryLength ]; // file directory
+    char    m_extension[ kMaxExtensionLength ]; // extension (includes .)
 };
 
 #endif // FILE_PATH_H

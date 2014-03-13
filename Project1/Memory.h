@@ -19,4 +19,20 @@ inline void  HeapFree( void *ptr ) { g_memoryManager.HeapFree( ptr ); }
 // allocate a block of memory that will persist until the program exits
 inline void* PermanentAllocate( uint32_t size ) { return g_memoryManager.PermanentAllocate( size ); }
 
+inline void* operator new( size_t size ) {
+    return g_memoryManager.HeapAllocate( (uint32_t)size );
+}
+
+inline void operator delete( void *ptr ) {
+    g_memoryManager.HeapFree( ptr );
+}
+
+inline void* operator new[]( size_t size ) {
+    return g_memoryManager.HeapAllocate( (uint32_t)size );
+}
+
+inline void operator delete[]( void *ptr ) throw() {
+    g_memoryManager.HeapFree( ptr );
+}
+
 #endif // MEMORY_H

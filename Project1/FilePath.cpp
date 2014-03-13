@@ -32,21 +32,10 @@ FilePath::FilePath( char const *path ) {
 copy constructor
 ------------------------------------------------------------------------------*/
 FilePath::FilePath( FilePath const &filePath ) {
-    memcpy( m_path, filePath.m_path, kMaxPathLength );
-    memcpy( m_name, filePath.m_name, kMaxNameLength );
-    memcpy( m_directory, filePath.m_directory, kMaxDirectoryLength );
-    memcpy( m_extension, filePath.m_extension, kMaxExtensionLength );
-}
-
-/*------------------------------------------------------------------------------
-assignment operator
-------------------------------------------------------------------------------*/
-FilePath& FilePath::operator=( FilePath const &filePath ) {
-    memcpy( m_path, filePath.m_path, kMaxPathLength );
-    memcpy( m_name, filePath.m_name, kMaxNameLength );
-    memcpy( m_directory, filePath.m_directory, kMaxDirectoryLength );
-    memcpy( m_extension, filePath.m_extension, kMaxExtensionLength );
-    return *this;
+    strcpy_s( m_path, filePath.m_path );
+    strcpy_s( m_name, filePath.m_name );
+    strcpy_s( m_directory, filePath.m_directory );
+    strcpy_s( m_extension, filePath.m_extension );
 }
 
 /*------------------------------------------------------------------------------
@@ -60,4 +49,13 @@ void ToWindowsPath( char *path ) {
         ++pPath;
         ch = *pPath;
     }
+}
+
+/*------------------------------------------------------------------------------
+convert to wchar_t. this returns a temporary buffer only valid until the next call
+------------------------------------------------------------------------------*/
+wchar_t* ToWchar( char const *str ) {
+    static wchar_t buffer[ kTempTextLength ];
+    mbstowcs( buffer, str, kTempTextLength - 1 );
+    return buffer;
 }

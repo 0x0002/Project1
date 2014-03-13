@@ -59,7 +59,7 @@ private:
 
 // global instance
 extern Device g_device;
-#define g_dxDevice        g_device.GetDevice()          
+#define g_dxDevice           g_device.GetDevice()          
 #define g_dxImmediateContext g_device.GetDeviceContext()
 
 #endif // DEVICE_H

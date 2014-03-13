@@ -1,13 +1,22 @@
 #include "Precompiled.h"
 #include "Graphics.h"
+#include "ResourceManager.h"
 #include "Device.h"
+#include "Camera.h"
 #include "GameWindow.h"
 
 #include <D3D11.h>                  // DirectX
 #include <D3DCommon.h>              // 
 #undef DrawText
+#undef near
+#undef far
 
+#include "Shader.h"
 #include "RenderState.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "DepthStencilBuffer.h"
+#include "RenderTarget.h"
 
 // global instance
 Graphics g_graphics;
@@ -18,9 +27,44 @@ initialize DirectX
 void Graphics::Initialize() {
     // initialize some singletons
     g_device.Initialize();
-    //g_camera.Initialize();
+    g_camera.Initialize();
+    g_camera.SetView( Vector3( 0, 0, 10 ), Vector3( 0, 0, 0 ), Vector3( 0, 1, 0 ) );
 
-    SetViewport();
+    // allocate stuff
+    m_staticModels = (StaticModelData*)PermanentAllocate( sizeof( StaticModelData ) * kMaxStaticModels );
+    m_staticModelCount = 0;
+
+    // depth stencil buffer
+    m_depthStencilBuffer = (DepthStencilBuffer*)PermanentAllocate( sizeof( DepthStencilBuffer ) );
+    m_lightDepthStencilBuffer = (DepthStencilBuffer*)PermanentAllocate( sizeof( DepthStencilBuffer ) );
+
+    // render targets
+    m_positionTarget = (RenderTarget*)PermanentAllocate( sizeof( RenderTarget ) );
+    m_normalTarget   = (RenderTarget*)PermanentAllocate( sizeof( RenderTarget ) );
+    m_albedoTarget   = (RenderTarget*)PermanentAllocate( sizeof( RenderTarget ) );
+
+    m_lightPositionTarget = (RenderTarget*)PermanentAllocate( sizeof( RenderTarget ) );
+    m_lightNormalTarget   = (RenderTarget*)PermanentAllocate( sizeof( RenderTarget ) );
+    m_lightAlbedoTarget   = (RenderTarget*)PermanentAllocate( sizeof( RenderTarget ) );
+
+    m_finalTarget = (RenderTarget*)PermanentAllocate( sizeof( RenderTarget ) );
+
+    // instance buffer
+    m_instanceBuffer = (VertexBuffer*)PermanentAllocate( sizeof( VertexBuffer ) );
+    m_instanceBuffer->CreateUninitialized( kInstanceBufferSize, true );
+
+    CreateDepthStencilBuffer();
+    CreateRenderTargets();
+    CreateConstantBuffers();
+    CreateSamplers();
+    CreateRenderStates();
+}
+
+/*------------------------------------------------------------------------------
+initialize DirectX
+------------------------------------------------------------------------------*/
+void Graphics::PostInitialize() {
+    LoadShaders();
 }
 
 /*------------------------------------------------------------------------------
@@ -35,8 +79,242 @@ void Graphics::PreDeinitialize() {
 deinitialize DirectX
 ------------------------------------------------------------------------------*/
 void Graphics::Deinitialize() {
+    DestroyDepthScentilBuffer();
+    DestroyRenderTargets();
+    DestroyConstantBuffers();
+    DestroySamplers();
+    DestroyRenderStates();
+
+    m_instanceBuffer->Destroy();
+
     //g_camera.Deinitialize();
     g_device.Deinitialize();
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::LoadShaders() {
+    m_gBufferShader = g_resourceManager.GetShader( "GBuffer.hlsl",          kVS_PS );
+    m_shadowShader  = g_resourceManager.GetShader( "Shadow.hlsl",           kVS_PS );
+    m_finalShader   = g_resourceManager.GetShader( "DirectionalLight.hlsl", kPS );
+
+    m_debugDepthShader      = g_resourceManager.GetShader( "DebugDepth.hlsl",      kPS );
+    m_debugNormalsShader    = g_resourceManager.GetShader( "DebugNormals.hlsl",    kPS );
+    m_debugDiffuseShader    = g_resourceManager.GetShader( "DebugDiffuse.hlsl",    kPS );
+    m_debugLightDepthShader = g_resourceManager.GetShader( "DebugLightDepth.hlsl", kPS );
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::ReloadShaders() {
+    g_resourceManager.UnloadShader( "GBuffer.hlsl",          kVS_PS );
+    g_resourceManager.UnloadShader( "Shadow.hlsl",           kVS_PS );
+    g_resourceManager.UnloadShader( "DirectionalLight.hlsl", kPS );
+
+    g_resourceManager.UnloadShader( "DebugDepth.hlsl",      kPS );
+    g_resourceManager.UnloadShader( "DebugNormals.hlsl",    kPS );
+    g_resourceManager.UnloadShader( "DebugDiffuse.hlsl",    kPS );
+    g_resourceManager.UnloadShader( "DebugLightDepth.hlsl", kPS );
+    LoadShaders();
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::CreateDepthStencilBuffer() {
+    Point resolution = g_gameWindow.GetResolution();
+    m_depthStencilBuffer->Create( resolution.x, resolution.y );
+
+    m_lightDepthStencilBuffer->Create( kShadowMapSize, kShadowMapSize );
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::DestroyDepthScentilBuffer() {
+    m_depthStencilBuffer->Destroy();
+    m_lightDepthStencilBuffer->Destroy();
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::CreateRenderTargets() {
+    Point resolution = g_gameWindow.GetResolution();
+    m_positionTarget->Create( DXGI_FORMAT_R16G16B16A16_FLOAT, resolution.x, resolution.y );
+    m_normalTarget->Create  ( DXGI_FORMAT_R16G16B16A16_FLOAT, resolution.x, resolution.y );
+    m_albedoTarget->Create  ( DXGI_FORMAT_R16G16B16A16_FLOAT, resolution.x, resolution.y );
+    m_lightPositionTarget->Create( DXGI_FORMAT_R16G16B16A16_FLOAT, kShadowMapSize, kShadowMapSize );
+    m_lightNormalTarget->Create  ( DXGI_FORMAT_R16G16B16A16_FLOAT, kShadowMapSize, kShadowMapSize );
+    m_lightAlbedoTarget->Create  ( DXGI_FORMAT_R16G16B16A16_FLOAT, kShadowMapSize, kShadowMapSize );
+    m_finalTarget->Create( DXGI_FORMAT_R16G16B16A16_FLOAT, resolution.x, resolution.y );
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::DestroyRenderTargets() {
+    m_positionTarget->Destroy();
+    m_normalTarget->Destroy();
+    m_albedoTarget->Destroy();
+    m_lightPositionTarget->Destroy();
+    m_lightNormalTarget->Destroy();
+    m_lightAlbedoTarget->Destroy();
+    m_finalTarget->Destroy();
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::CreateConstantBuffers() {
+    D3D11_BUFFER_DESC bufferDesc;
+    memset( &bufferDesc, 0, sizeof( bufferDesc ) );
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+
+#if 0
+    bufferDesc.ByteWidth = sizeof( PerFrameCB );
+    g_dxDevice->CreateBuffer( &bufferDesc, NULL, &m_perFrameCB );
+
+    bufferDesc.ByteWidth = sizeof( LightCB );
+    g_dxDevice->CreateBuffer( &bufferDesc, NULL, &m_lightCB );
+
+    bufferDesc.ByteWidth = sizeof( ShadowCB );
+    g_dxDevice->CreateBuffer( &bufferDesc, NULL, &m_shadowCB );
+#endif
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::DestroyConstantBuffers() {
+#if 0
+    m_perFrameCB->Release();
+    m_lightCB->Release();
+    m_shadowCB->Release();
+#endif
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::CreateSamplers() {
+    D3D11_SAMPLER_DESC samplerLinearClampDesc;
+    memset( &samplerLinearClampDesc, 0, sizeof( samplerLinearClampDesc ) );
+    samplerLinearClampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerLinearClampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerLinearClampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerLinearClampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerLinearClampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerLinearClampDesc.MinLOD = 0;
+    samplerLinearClampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    g_dxDevice->CreateSamplerState( &samplerLinearClampDesc, &m_samplerLinearClamp );
+
+    D3D11_SAMPLER_DESC samplerAnisotropicClampDesc;
+    memset( &samplerAnisotropicClampDesc, 0, sizeof( samplerAnisotropicClampDesc ) );
+    samplerAnisotropicClampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+    samplerAnisotropicClampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerAnisotropicClampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerAnisotropicClampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerAnisotropicClampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerAnisotropicClampDesc.MinLOD = 0;
+    samplerAnisotropicClampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    g_dxDevice->CreateSamplerState( &samplerAnisotropicClampDesc, &m_samplerAnisotropicClamp );
+
+    D3D11_SAMPLER_DESC samplerPointClampDesc;
+    memset( &samplerPointClampDesc, 0, sizeof( samplerPointClampDesc ) );
+    samplerPointClampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+    samplerPointClampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerPointClampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerPointClampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerPointClampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerPointClampDesc.MinLOD = 0;
+    samplerPointClampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    g_dxDevice->CreateSamplerState( &samplerPointClampDesc, &m_samplerPointClamp );
+
+    D3D11_SAMPLER_DESC samplerLinearWrapDesc;
+    memset( &samplerLinearWrapDesc, 0, sizeof( samplerLinearWrapDesc ) );
+    samplerLinearWrapDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerLinearWrapDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerLinearWrapDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerLinearWrapDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerLinearWrapDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerLinearWrapDesc.MinLOD = 0;
+    samplerLinearWrapDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    g_dxDevice->CreateSamplerState( &samplerLinearWrapDesc, &m_samplerLinearWrap );
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::DestroySamplers() {
+    m_samplerLinearClamp->Release();
+    m_samplerAnisotropicClamp->Release();
+    m_samplerPointClamp->Release();
+    m_samplerLinearWrap->Release();
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::CreateRenderStates() {
+    // depth stencil states
+    D3D11_DEPTH_STENCIL_DESC defaultDepthStencilDesc = DefaultDepthStencilDesc();
+    g_dxDevice->CreateDepthStencilState( &defaultDepthStencilDesc, &m_defaultDepthStencilState );
+
+    D3D11_DEPTH_STENCIL_DESC depthLessEqualDesc = DefaultDepthStencilDesc();
+    depthLessEqualDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    depthLessEqualDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    g_dxDevice->CreateDepthStencilState( &depthLessEqualDesc, &m_depthLessEqual );
+
+    D3D11_DEPTH_STENCIL_DESC depthDisableDesc = DefaultDepthStencilDesc();
+    depthDisableDesc.DepthEnable = FALSE;                                  // depth test disabled
+    depthDisableDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;         // depth write disabled
+    DxVerify( g_dxDevice->CreateDepthStencilState( &depthDisableDesc, &m_depthDisable ) );
+
+    // rasterizer states
+    D3D11_RASTERIZER_DESC defaultRasterizerDesc = DefaultRasterizerDesc();
+    g_dxDevice->CreateRasterizerState( &defaultRasterizerDesc, &m_defaultRasterizerState );
+
+    D3D11_RASTERIZER_DESC cullFrontDesc = DefaultRasterizerDesc();
+    cullFrontDesc.CullMode = D3D11_CULL_FRONT;
+    DxVerify( g_dxDevice->CreateRasterizerState( &cullFrontDesc, &m_cullFront ) );
+
+    D3D11_RASTERIZER_DESC cullNoneDesc = DefaultRasterizerDesc();
+    cullNoneDesc.CullMode = D3D11_CULL_NONE;
+    DxVerify( g_dxDevice->CreateRasterizerState( &cullNoneDesc, &m_cullNone ) );
+
+    // blend states
+    D3D11_BLEND_DESC defaultBlendDesc = DefaultBlendDesc();
+    g_dxDevice->CreateBlendState( &defaultBlendDesc, &m_defaultBlendState );
+
+    D3D11_BLEND_DESC additiveDesc = DefaultBlendDesc();
+    additiveDesc.RenderTarget[ 0 ].BlendEnable = TRUE;
+    additiveDesc.RenderTarget[ 0 ].DestBlend = D3D11_BLEND_ONE;
+    additiveDesc.RenderTarget[ 0 ].DestBlendAlpha = D3D11_BLEND_ONE;
+    DxVerify( g_dxDevice->CreateBlendState( &additiveDesc, &m_additive ) );
+}
+
+/*------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------*/
+void Graphics::DestroyRenderStates() {
+    // depth stencil states
+    m_defaultDepthStencilState->Release();
+    m_depthLessEqual->Release();
+    m_depthDisable->Release();
+
+    // rasterizer states
+    m_defaultRasterizerState->Release();
+    m_cullFront->Release();
+    m_cullNone->Release();
+
+    // blend states
+    m_defaultBlendState->Release();
+    m_additive->Release();
 }
 
 /*------------------------------------------------------------------------------

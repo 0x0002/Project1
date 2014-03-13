@@ -155,9 +155,9 @@ void Device::CreateDeviceAndSwapChain() {
 
     // get the swap chain's back buffer
 	ID3D11Texture2D *backBuffer = NULL;
-	DxVerify( g_device.GetSwapChain()->GetBuffer( 0,
-									              __uuidof( ID3D11Texture2D ),
-									              (void**)&backBuffer ) );
+	DxVerify( m_swapChain->GetBuffer( 0,
+									  __uuidof( ID3D11Texture2D ),
+									  (void**)&backBuffer ) );
 
     // create a render target view using the back buffer
 	DxVerify( m_device->CreateRenderTargetView( backBuffer,

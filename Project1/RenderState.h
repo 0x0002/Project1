@@ -1,7 +1,7 @@
 #ifndef RENDER_STATE_H
 #define RENDER_STATE_H
 
-#include <D3D11.h>              // DirectX
+#include <D3D11.h> // DirectX
 
 /*------------------------------------------------------------------------------
 returns a depth stencil description with default values
