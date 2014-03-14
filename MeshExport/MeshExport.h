@@ -11,6 +11,8 @@ public:
     virtual bool haveWriteMethod() const override { return true; }
 
     virtual MString defaultExtension() const override { return "*.mesh"; }
+    virtual MString filter() const override { return defaultExtension(); }
+    virtual MPxFileTranslator::MFileKind identifyFile( MFileObject const &file, char const* buffer, short size ) const override;
 
     static const MString m_name;
 };

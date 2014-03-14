@@ -1,4 +1,4 @@
-#ifdef WIN32
+#ifdef _WIN32
     #define MLL_EXPORT __declspec(dllexport)
 #else
     #define MLL_EXPORT
